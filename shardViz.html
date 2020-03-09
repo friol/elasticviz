@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+
+<style>
+
+svg {
+  font: 10px sans-serif;
+}
+
+a:hover tspan:first-child {
+  text-decoration: underline;
+}
+
+tspan:last-child {
+  font-size: 9px;
+  fill-opacity: 0.7;
+}
+
+</style>
+
+<head>
+    <script src="js/d3.min.js"></script>
+    <script src="js/main.js"></script>
+
+</head>
+
+
+<body>
+
+    <div style="float:left">
+    Upload shard file (GET _cat/shards?format=json):
+    <input id="shardFile" type="file" />
+    </div>
+    <br/><br/>
+
+    <svg width="1300" height="640"></svg>
+
+
+</body>
+
+</html>
