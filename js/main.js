@@ -161,13 +161,56 @@ function buildTreeViz()
        ;    
 }
 
-function buildBarViz()
+function fillIndexCombo()
 {
-    var width=1200;
-    var height=640;
+    var select = document.getElementById("indexSelect"); 
 
-    var margin = {top: 20, right: 20, bottom: 30, left: 40};
+    function compare(a,b)
+    {
+        return ( ( a.indexName == b.indexName ) ? 0 : ( ( a.indexName > b.indexName ) ? 1 : -1 ) );
+    }
 
+    glbIndexArray.sort(compare);
+
+    var tmpIndexArr=[];
+
+    for (var i=0;i<glbIndexArray.length;i++)
+    {
+        var indx=glbIndexArray[i].indexName;
+
+        var objDateType=extractDateType(indx);
+
+        if (objDateType=="daily")
+        {
+            var curDate=new Date();
+            var curYear=curDate.getFullYear();
+            var dateStart=indx.indexOf(curYear.toString());
+            var onlyIndex=indx.substring(0,dateStart);
+
+            if (!tmpIndexArr.includes(onlyIndex))
+            {
+                tmpIndexArr.push(onlyIndex);
+            }
+        }
+    }
+
+    tmpIndexArr.forEach(element => {
+        var el = document.createElement("option");
+        el.textContent = element;
+        el.value = element;
+        select.appendChild(el);
+    });
+}
+
+function onSelectIndex()
+{
+    var myselect = document.getElementById("indexSelect");
+    var selVal=myselect.options[myselect.selectedIndex].value;
+    buildBarViz(selVal);
+}
+
+function buildBarViz(idxName)
+{
     var data=[];
 
     var maxH=0;
@@ -175,11 +218,11 @@ function buildBarViz()
     for (var i=0;i<glbIndexArray.length;i++)
     {
         var indx=glbIndexArray[i].indexName;
-        if (indx.indexOf("fly.sdp.application")!=-1)
+        if (indx.indexOf(idxName)!=-1)
         {
             var vizObj=new Object();
             vizObj.name=glbIndexArray[i].indexName;
-            vizObj.value=parseInt(glbIndexArray[i].idxSize)/1024*1024;
+            vizObj.value=parseInt(glbIndexArray[i].idxSize)/(1024*1024*1024);
             vizObj.id=barId;
 
             if (vizObj.value>maxH) maxH=vizObj.value;
@@ -188,78 +231,55 @@ function buildBarViz()
             barId+=1;
         }
     }
-   
-    var svg = d3.select("body").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-    .attr("transform", 
-        "translate(" + margin.left + "," + margin.top + ")");  
-        var svg = d3.select("svg"),
-        margin = {
-            top: 20,
-            right: 20,
-            bottom: 30,
-            left: 50
-        },
-        width = +svg.attr("width") - margin.left - margin.right,
-        height = +svg.attr("height") - margin.top - margin.bottom,
-        g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-        
-        //var parseTime = d3.timeParse("%d-%b-%y");
-        
-        var x = d3.scaleBand()
-            .rangeRound([0, width])
-            .padding(0.1);
-        
-        var y = d3.scaleLinear()
-            .rangeRound([height, 0]);
-        
-            x.domain(data.map(function (d) {
-                    return d.name;
-                }));
-            /*y.domain([0, d3.max(data, function (d) {
-                        return Nd.value;
-                    })]);*/
-        
-            //g.append("g")
-            //.attr("transform", "translate(0," + height + ")")
-            //.call(d3.axisBottom(x))
-        
-            svg.append("g")
-            .attr("class", "x axis")
-            .attr("transform", "translate(0," + height + ")")
-            .call(d3.axisBottom(x))
-            .selectAll("text")  
-            .style("text-anchor", "end")
-            .attr("dx", "-.8em")
-            .attr("dy", ".15em")
-            .attr("transform", "rotate(-90)");
 
-            g.append("g")
-            .call(d3.axisLeft(y))
-            .append("text")
-            .attr("fill", "#000")
-            //.attr("transform", "rotate(-90)")
-            .attr("y", 6)
-            .attr("dy", "0.71em")
-            .attr("text-anchor", "end")
-            .text("Idx Size");
-        
-            g.selectAll(".bar")
-            .data(data)
-            .enter().append("rect")
-            .attr("class", "bar")
-            .attr("x", function (d) {
-                return d.id*50;
-            })
-            .attr("y", function (d) {
-                return 0;
-            })
-            .attr("width", 50)
-            .attr("height", function (d) {
-                return 300-d.value*300/maxH;
-            });
+    function compare(a,b)
+    {
+        return ( ( a.name == b.name ) ? 0 : ( ( a.name > b.name ) ? 1 : -1 ) );
+    }
+
+    data.sort(compare);
+
+    //
+
+    var svg = d3.select("svg"),
+    margin = 200,
+    width = 1000,
+    height = 500;
+
+    var xScale = d3.scaleBand().range ([0, width]).padding(0.4),
+    yScale = d3.scaleLinear().range ([height, 0]);
+
+    var g = svg.append("g").attr("transform", "translate(" + 100 + "," + 0 + ")");    
+
+    xScale.domain(data.map(function(d) { return d.name; }));
+    yScale.domain([0, d3.max(data, function(d) { return d.value; })]);
+
+    svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(100," + height + ")")
+    .call(d3.axisBottom(xScale))
+    .selectAll("text")  
+    .style("text-anchor", "end")
+    .attr("dx", "-.8em")
+    .attr("dy", ".15em")
+    .attr("transform", "rotate(-90) translate(0,-10)");
+
+    g.append("g")
+     .call(d3.axisLeft(yScale).tickFormat(function(d){ return d; }).ticks(10))
+     .append("text")
+     .attr("y", 6)
+     .attr("dy", "0.71em")
+     .attr("text-anchor", "end")
+     .text("value");    
+   
+     g.selectAll(".bar")
+     .data(data)
+     .enter().append("rect")
+     .attr("class", "bar")
+     .attr("x", function(d) { return xScale(d.name); })
+     .attr("y", function(d) { return yScale(d.value); })
+     .attr("width", xScale.bandwidth())
+     .attr("height", function(d) { return height - yScale(d.value); });     
 }
 
 function sizeToBytes(s)
@@ -302,16 +322,6 @@ function sizeToBytes(s)
 
 function storeStatsElement(el)
 {
-/*
-    var idxName=el.substr(0,60).trim();
-    var shardId=el.substr(61,6).trim();
-    var shardType=el.substr(67,7).trim();
-    var shardStatus=el.substr(74,11).trim();
-    var numDocs=el.substr(85,12).trim();
-    var shardSize=el.substr(97,9).trim();
-    var machineIp=el.substr(106,14).trim();
-    var nodeName=el.substr(120).trim();
-*/
     var idxName=el.index;
     var shardStatus=el.state;
     var shardSize=el.store;
@@ -335,7 +345,9 @@ function storeStatsElement(el)
 function extractDate(idxName)
 {
     idxName=idxName.replace("_slice","");
-    var dateStart=idxName.indexOf("2020");
+    var curDate=new Date();
+    var curYear=curDate.getFullYear();
+    var dateStart=idxName.indexOf(curYear.toString());
 
     var dateObj=new Object();
     dateObj.year=0;
@@ -373,18 +385,20 @@ function extractDate(idxName)
 function extractDateType(idxName)
 {
     idxName=idxName.replace("_slice","");
-    var dateStart=idxName.indexOf("2020");
+    var curDate=new Date();
+    var curYear=curDate.getFullYear();
+    var dateStart=idxName.indexOf(curYear.toString());
 
     if (dateStart>0)
     {
         var theDate=idxName.substring(dateStart);
         var numPoints=theDate.split(".").length;
 
-        if (numPoints==2)
+        if (numPoints==3)
         {
             return "daily";
         }
-        else if (numPoints==1)
+        else if (numPoints==2)
         {
             return "monthly";
         }
@@ -399,17 +413,21 @@ function extractDateType(idxName)
 
 function storeIndexStats(el)
 {
-    var idxName=el.substr(14,60).trim();
-    var numDocs=el.substr(106,10).trim();
-    var idxSize=el.substr(130,11).trim();
+    var idxName=el.index;
+    var numDocs=el["docs.count"];
+    var idxSize=el["store.size"];
 
-    var newIndex=new Object();
-    newIndex.indexName=idxName;
-    newIndex.indexDate=extractDate(idxName);
-    newIndex.idxDateType=extractDateType(idxName);
-    newIndex.idxSize=sizeToBytes(idxSize);
+    if ((numDocs!=null)&&(idxSize!=null))
+    {
+        var newIndex=new Object();
+        idxName=idxName.replace("_slice","");
+        newIndex.indexName=idxName;
+        newIndex.indexDate=extractDate(idxName);
+        newIndex.idxDateType=extractDateType(idxName);
+        newIndex.idxSize=sizeToBytes(idxSize);
 
-    glbIndexArray.push(newIndex);
+        glbIndexArray.push(newIndex);
+    }
 }
 
 window.onload=function()
@@ -428,20 +446,14 @@ window.onload=function()
                 if (urlName.indexOf("indexViz")>0)
                 {
                     // index graph
-
-                    var el=0;
                     var res=e.target.result;
-                    var resarr=res.split("\n");
-                    resarr.forEach(element => 
+                    var parsedJson=JSON.parse(res);
+                    parsedJson.forEach(element => 
                     {
-                        if (el>0)
-                        {
-                            storeIndexStats(element);
-                        }
-                        
-                        el++;
+                        storeIndexStats(element);
                     });
-                    
+
+                    fillIndexCombo();
                     buildBarViz();
                 }
                 else if (urlName.indexOf("shardViz")>0)
