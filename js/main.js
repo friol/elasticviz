@@ -23,7 +23,7 @@ function buildTreeViz()
         var nodeName=glbShardArray[s].nodeName;
         var machineNum=-1;
 
-        //if (nodeName.indexOf("esdn")!=-1)
+        if (nodeName.indexOf("esdn")!=-1)
         {
             for (var m=0;m<data.children.length;m++)
             {
@@ -421,6 +421,7 @@ function storeIndexStats(el)
     {
         var newIndex=new Object();
         idxName=idxName.replace("_slice","");
+        idxName=idxName.replace("_1","");
         newIndex.indexName=idxName;
         newIndex.indexDate=extractDate(idxName);
         newIndex.idxDateType=extractDateType(idxName);
@@ -454,7 +455,6 @@ window.onload=function()
                     });
 
                     fillIndexCombo();
-                    buildBarViz();
                 }
                 else if (urlName.indexOf("shardViz")>0)
                 {
