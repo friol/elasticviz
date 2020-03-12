@@ -218,17 +218,25 @@ function buildBarViz(idxName)
     for (var i=0;i<glbIndexArray.length;i++)
     {
         var indx=glbIndexArray[i].indexName;
+
+        var curDate=new Date();
+        var curYear=curDate.getFullYear();
+        var idxNameWithYear=idxName+curYear;
+
         if (indx.indexOf(idxName)!=-1)
         {
-            var vizObj=new Object();
-            vizObj.name=glbIndexArray[i].indexName;
-            vizObj.value=parseInt(glbIndexArray[i].idxSize)/(1024*1024*1024);
-            vizObj.id=barId;
+            if (indx.indexOf(idxNameWithYear)!=-1)
+            {
+                var vizObj=new Object();
+                vizObj.name=glbIndexArray[i].indexName;
+                vizObj.value=parseInt(glbIndexArray[i].idxSize)/(1024*1024*1024);
+                vizObj.id=barId;
 
-            if (vizObj.value>maxH) maxH=vizObj.value;
+                if (vizObj.value>maxH) maxH=vizObj.value;
 
-            data.push(vizObj);
-            barId+=1;
+                data.push(vizObj);
+                barId+=1;
+            }
         }
     }
 
@@ -241,18 +249,23 @@ function buildBarViz(idxName)
 
     //
 
+    d3.select("svg").remove();
+
+    d3.select("body").append("svg").attr("width", 1400)
+    .attr("height", 640);
     var svg = d3.select("svg"),
     margin = 200,
-    width = 1000,
-    height = 500;
+    yshift=0,
+    width = 1300,
+    height = 340;
 
     var xScale = d3.scaleBand().range ([0, width]).padding(0.4),
     yScale = d3.scaleLinear().range ([height, 0]);
 
-    var g = svg.append("g").attr("transform", "translate(" + 100 + "," + 0 + ")");    
+    var g = svg.append("g").attr("transform", "translate(" + 100 + "," + yshift + ")");    
 
     xScale.domain(data.map(function(d) { return d.name; }));
-    yScale.domain([0, d3.max(data, function(d) { return d.value; })]);
+    yScale.domain([0, d3.max(data, function(d) { return d.value; })+(20*d3.max(data, function(d) { return d.value; }))/100]);
 
     svg.append("g")
     .attr("class", "x axis")
@@ -272,14 +285,53 @@ function buildBarViz(idxName)
      .attr("text-anchor", "end")
      .text("value");    
    
-     g.selectAll(".bar")
-     .data(data)
-     .enter().append("rect")
-     .attr("class", "bar")
-     .attr("x", function(d) { return xScale(d.name); })
-     .attr("y", function(d) { return yScale(d.value); })
-     .attr("width", xScale.bandwidth())
-     .attr("height", function(d) { return height - yScale(d.value); });     
+     function onMouseOver(d, i) {
+    
+        d3.select(this).attr('class', 'highlight');
+/*        d3.select(this)
+          .transition()
+          .duration(400)
+          .attr('width', x.bandwidth() + 5)
+          .attr("y", function(d) { return y(d.value) - 10; })
+          .attr("height", function(d) { return height - y(d.value) + 10; });*/
+    
+        g.append("text")
+         .attr('class', 'val')
+         .attr('x', function() {
+             return xScale(d.name);
+         })
+         .attr('y', function() {
+             return yScale(d.value)-10;
+         })
+         .text(function() {
+             return [floorFigure(d.value,2)+"gb"];
+         });
+    }    
+
+    function onMouseOut(d, i) {
+        
+        d3.select(this).attr('class', 'bar');
+/*        d3.select(this)
+          .transition()
+          .duration(400)
+          .attr('width', x.bandwidth())
+          .attr("y", function(d) { return y(d.value); })
+          .attr("height", function(d) { return height - y(d.value); });
+*/
+        d3.selectAll('.val')
+          .remove()
+    }    
+
+    g.selectAll(".bar")
+    .data(data)
+    .enter().append("rect")
+    .attr("class", "bar")
+    .on("mouseover", onMouseOver)
+    .on("mouseout", onMouseOut)
+    .attr("x", function(d) { return xScale(d.name); })
+    .attr("y", function(d) { return yScale(d.value); })
+    .attr("width", xScale.bandwidth())
+    .attr("height", function(d) { return height - yScale(d.value); });     
 }
 
 function sizeToBytes(s)

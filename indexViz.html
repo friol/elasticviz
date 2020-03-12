@@ -5,10 +5,14 @@
 .bar {
 	  fill: steelblue;
 	}
-
+/*
 	.bar:hover {
 	  fill: brown;
 	}
+*/
+  .highlight {
+            fill: orange;
+  }  
 
 </style>
 
@@ -22,7 +26,7 @@
 <body>
 
     <div style="float:left">
-    Upload index file (GET _cat/indices?v&s=docs.count):
+    Upload index file (GET _cat/indices?format=json):
     <input id="shardFile" type="file" />
     </div>
     <br/><br/>
@@ -33,7 +37,9 @@
       </select>
     </form>
 
-    <svg width="1200" height="640"></svg>
+    <br/><br/>
+
+    <!--<svg width="1200" height="640"></svg>-->
 
 
 </body>
