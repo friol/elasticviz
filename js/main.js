@@ -9,6 +9,52 @@ function floorFigure(figure, decimals){
     return (parseInt(figure*d)/d).toFixed(decimals);
 };
 
+function removeDuplicateIndices()
+{
+    var idxCopy=[];
+
+    for (var i=0;i<glbIndexArray.length;i++)
+    {
+        var curName=glbIndexArray[i].indexName;
+        var alreadyProcessed=false;
+
+        for (var k=0;k<idxCopy.length;k++)
+        {
+            if (idxCopy[k].indexName==curName)
+            {
+                alreadyProcessed=true;
+            }
+        }
+
+        if (!alreadyProcessed)
+        {
+            var objDateType=extractDateType(curName);
+            if (objDateType=="daily")
+            {
+                var storedObj=new Object();
+                storedObj.indexName=curName;
+                storedObj.idxSize=0;
+
+                for (var j=0;j<glbIndexArray.length;j++)
+                {
+                    if (glbIndexArray[j].indexName==curName)
+                    {
+                        storedObj.idxSize+=glbIndexArray[j].idxSize;
+                    }
+                }
+
+                idxCopy.push(storedObj);
+            }
+        }
+    }
+
+    glbIndexArray=[];
+    for (var i=0;i<idxCopy.length;i++)
+    {
+        glbIndexArray.push(idxCopy[i]);
+    }
+}
+
 function buildTreeViz()
 {
     var svg = d3.select("svg"),width = +svg.attr("width"),height = +svg.attr("height");
@@ -23,7 +69,8 @@ function buildTreeViz()
         var nodeName=glbShardArray[s].nodeName;
         var machineNum=-1;
 
-        if (nodeName.indexOf("esdn")!=-1)
+        //if ((nodeName.indexOf("esdn")!=-1)||(nodeName.indexOf("esdpn")!=-1))
+        if ((nodeName.indexOf("esdn")!=-1))
         {
             for (var m=0;m<data.children.length;m++)
             {
@@ -507,6 +554,7 @@ window.onload=function()
                     });
 
                     fillIndexCombo();
+                    removeDuplicateIndices();
                 }
                 else if (urlName.indexOf("shardViz")>0)
                 {
